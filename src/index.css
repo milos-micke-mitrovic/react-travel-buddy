@@ -1,0 +1,17 @@
+/* src/index.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.custom-background {
+  background-image: url("/images/background.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  min-height: 100vh;
+}
+
+body {
+  @apply bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat min-h-screen;
+}
