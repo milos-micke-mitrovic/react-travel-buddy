@@ -1,14 +1,20 @@
 import React, { useState } from "react";
-import FormLabel from "./UI/FormLabel";
+
 import useCitySearch from "../hooks/useCitySearch";
-import SquareButton from "./UI/SquareButton";
+import markerImage from "../assets/images/marker.png";
+import FormLabel from "./UI/FormLabel";
 import InputDropdown from "./UI/InputDropdown";
+import SquareButton from "./UI/Buttons/SquareButton";
+import CircleButton from "./UI/Buttons/CircleButton";
+import MiniCalendar from "./MiniCalendar";
+import { todayDate } from "../utils";
 
 const Home: React.FC = () => {
   const [cityOfDestinationFields, setCityOfDestinationFields] = useState<
     string[]
   >([""]);
-  const [dateOfTrip, setDateOfTrip] = useState<string>("");
+  const [dateOfTrip, setDateOfTrip] = useState<string | null>(null);
+  const [isMiniCalendarOpen, setIsMiniCalendarOpen] = useState<boolean>(false);
   const [numberOfPassengers, setNumberOfPassengers] = useState<number>(0);
 
   const {
@@ -37,30 +43,69 @@ const Home: React.FC = () => {
     setNumberOfPassengers((prevPassengers) => prevPassengers + 1);
   };
 
+  const openMiniCalendar = () => {
+    setIsMiniCalendarOpen((prev) => !prev);
+  };
+
+  const handleDateChange = (date: string) => {
+    setDateOfTrip(date);
+    setIsMiniCalendarOpen(false);
+  };
+
   const handleSubmit = () => {
     // Implement the form submission logic here
   };
 
-  // Form validation logic (check if required fields are filled and date is in the future)
-  const isFormValid =
-    searchTerms[0] !== "" &&
-    cityOfDestinationFields.every((field) => field !== "") &&
-    new Date(dateOfTrip) > new Date() &&
-    numberOfPassengers >= 0; // Allow zero or more passengers
-
-  const handleSelectCity = (index: number, city: string) => {
+  const handleSelectCity = (city: string, index: number) => {
     addSearchTerm(index, city);
+
     setShowSearchResults((prevShowResults) => {
       const newShowResults = [...prevShowResults];
-      newShowResults[index] = false; // Hide the search results when a city is selected
+      newShowResults[index] = false;
       return newShowResults;
     });
   };
 
+  const isFormValid =
+    searchTerms[0] !== "" &&
+    cityOfDestinationFields.every((field) => field !== "") &&
+    (dateOfTrip ? new Date(dateOfTrip) > new Date() : false) &&
+    numberOfPassengers >= 0;
+
   return (
     <div className="flex items-center justify-center h-screen">
-      <div className="max-w-sm w-full sm:max-w-md bg-white p-8 rounded-lg shadow-md">
-        <form>
+      <div className="max-w-sm w-full sm:max-w-md bg-white p-8 rounded-lg shadow-md flex overflow-auto  max-h-screen md:max-h-[90%]">
+        <div className="flex flex-col">
+          <div className="flex flex-col items-center mr-10 mt-8">
+            <CircleButton additionalClasses="cursor-default">
+              <></>
+            </CircleButton>
+
+            <div className="vertical-dots"></div>
+
+            {cityOfDestinationFields.map((_, index) => (
+              <React.Fragment key={index}>
+                {index < cityOfDestinationFields.length - 1 ? (
+                  <>
+                    <CircleButton additionalClasses="cursor-default">
+                      <></>
+                    </CircleButton>
+
+                    <div className="vertical-dots"></div>
+                  </>
+                ) : (
+                  <img src={markerImage} className="w-4 h-5" alt="Marker" />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+
+          <CircleButton additionalClasses="cursor-default mt-7 pb-[1px]">
+            &#43;
+          </CircleButton>
+        </div>
+
+        <form className="w-full h-full">
           {/* City of Origin */}
           <div className="mb-4">
             <FormLabel htmlFor="cityOfOrigin" label="City of Origin" />
@@ -70,7 +115,7 @@ const Home: React.FC = () => {
               id="cityOfOrigin"
               value={searchTerms[0] || ""}
               onChange={(e) => addSearchTerm(0, e.target.value)}
-              className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
+              className="mt-1 h-10 p-2 border border-gray-300 rounded-lg w-11/12"
             />
 
             {showSearchResults[0] &&
@@ -92,13 +137,23 @@ const Home: React.FC = () => {
                 label="City of destination"
               />
 
-              <input
-                type="text"
-                id={`cityOfDestination_${index}`}
-                value={searchTerms[index + 1] || ""}
-                onChange={(e) => addSearchTerm(index + 1, e.target.value)}
-                className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
-              />
+              <div className="flex items-center justify-between">
+                <input
+                  type="text"
+                  id={`cityOfDestination_${index}`}
+                  value={searchTerms[index + 1] || ""}
+                  onChange={(e) => addSearchTerm(index + 1, e.target.value)}
+                  className="mt-1 p-2 h-10 border border-gray-300 rounded-lg w-11/12"
+                />
+
+                {index > 0 && (
+                  <CircleButton
+                    onClick={() => handleRemoveCityOfDestinationField(index)}
+                  >
+                    &#10005;
+                  </CircleButton>
+                )}
+              </div>
 
               {showSearchResults[index + 1] &&
                 searchResults[index + 1] &&
@@ -109,50 +164,54 @@ const Home: React.FC = () => {
                     index={index + 1}
                   />
                 )}
-
-              {index > 0 && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveCityOfDestinationField(index)}
-                  className="mt-2 px-3 py-1 rounded-lg bg-red-500 text-white"
-                >
-                  Remove City of Destination
-                </button>
-              )}
             </div>
           ))}
 
           {/* Add Destination Button */}
           <div
             onClick={handleAddCityOfDestinationField}
-            className="text-main-dark cursor-pointer mb-4"
+            className="text-main-dark cursor-pointer mb-4  flex items-center"
           >
             Add Destination
           </div>
 
           {/* Date of the Trip */}
           <div className="mb-4">
-            <FormLabel htmlFor="dateOfTrip" label="Date of the Trip" />
+            <FormLabel htmlFor="dateOfTrip" label="Date" />
 
-            <input
-              type="date"
-              id="dateOfTrip"
-              value={dateOfTrip}
-              onChange={(e) => setDateOfTrip(e.target.value)}
-              className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
-            />
-            {/* Implement the date input field for Date of the Trip */}
-            {/* ... */}
+            <div
+              onClick={openMiniCalendar}
+              className="flex justify-center items-center border border-gray-300 rounded-lg p-2 mt-1 h-10 max-w-min cursor-pointer"
+            >
+              {dateOfTrip
+                ? new Date(dateOfTrip).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })
+                : todayDate()}
+            </div>
+
+            {isMiniCalendarOpen && (
+              <MiniCalendar
+                selectedDate={dateOfTrip || ""}
+                onDateChange={handleDateChange}
+              />
+            )}
           </div>
 
           {/* Number of Passengers */}
           <div className="mb-4">
             <FormLabel label="Passengers" />
 
-            <div className="flex items-center gap-4 border border-gray-300 rounded-lg p-2 mt-1 max-w-min">
-              <SquareButton onClick={handleDecreasePassengers}>-</SquareButton>
+            <div className="flex items-center gap-4 border border-gray-300 rounded-lg p-2 mt-1 h-10 max-w-min">
+              <SquareButton onClick={handleDecreasePassengers}>
+                &#45;
+              </SquareButton>
               {numberOfPassengers}
-              <SquareButton onClick={handleIncreasePassengers}>+</SquareButton>
+              <SquareButton onClick={handleIncreasePassengers}>
+                &#43;
+              </SquareButton>
             </div>
           </div>
 
