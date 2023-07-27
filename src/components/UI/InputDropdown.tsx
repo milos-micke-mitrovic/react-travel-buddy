@@ -5,20 +5,22 @@ const InputDropdown: React.FC<{
   onClick?: (item: string, index: number) => void;
   index?: number;
   children?: ReactNode;
-}> = ({ liItems, onClick, index = -1, children }) => {
+  onBlur?: () => void
+}> = ({ liItems, onClick, index = -1, children, onBlur }) => {
   const inputDropdownRef = useRef<HTMLDivElement | null>(null);
   const [isDropdownVisible, setIsDropdownVisible] = useState(true);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      console.log(event.target);
-
       if (
         isDropdownVisible &&
         inputDropdownRef.current &&
         !inputDropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownVisible(false);
+        if(onBlur) {
+          onBlur()
+        }
       }
     };
 

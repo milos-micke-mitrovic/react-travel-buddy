@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { format, isSameMonth, isSameDay, startOfMonth } from "date-fns";
+
 import InputDropdown from "./UI/InputDropdown";
+import { MONTH_ABBREVIATIONS, WEEK_DAYS_ABBREVIATIONS } from "../constants";
+import { generateMiniCalendarDates, yearList } from "../utils";
 
 interface MiniCalendarProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
+  onBlur: () => void;
 }
 
 const MiniCalendar: React.FC<MiniCalendarProps> = ({
   selectedDate,
   onDateChange,
+  onBlur,
 }) => {
   const currentDate =
     selectedDate && !isNaN(Date.parse(selectedDate))
@@ -17,19 +23,8 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({
 
   const [month, setMonth] = useState<number>(currentDate.getMonth());
   const [year, setYear] = useState<number>(currentDate.getFullYear());
-  const [daysInMonth, setDaysInMonth] = useState<number[]>([]);
   const [showMonthDropdown, setShowMonthDropdown] = useState<boolean>(false);
   const [showYearDropdown, setShowYearDropdown] = useState<boolean>(false);
-
-  useEffect(() => {
-    generateDaysInMonth(year, month);
-  }, [year, month]);
-
-  const generateDaysInMonth = (year: number, month: number) => {
-    const days = new Array(31).fill(0).map((_, index) => index + 1);
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    setDaysInMonth(days.slice(0, lastDay));
-  };
 
   const handlePreviousMonth = () => {
     if (month === 0) {
@@ -49,10 +44,8 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({
     }
   };
 
-  const handleDateClick = (day: number) => {
-    const formattedDate = `${year}-${(month + 1)
-      .toString()
-      .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+  const handleDateClick = (date: Date) => {
+    const formattedDate = format(date, "yyyy-MM-dd");
     onDateChange(formattedDate);
   };
 
@@ -78,79 +71,107 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({
     setShowYearDropdown(false);
   };
 
+  const renderDays = () => {
+    const calendarDates = generateMiniCalendarDates(year, month);
+    const currentMonthStart = startOfMonth(new Date(year, month));
+
+    return calendarDates.map((date) => {
+      const classNames = [
+        "text-center p-2 w-8 h-8 cursor-pointer flex items-center justify-center",
+      ];
+
+      if (!isSameMonth(date, currentMonthStart)) {
+        classNames.push("text-gray-400"); // Silver tint for days from adjacent months
+      } else {
+        classNames.push("text-black");
+      }
+
+      if (isSameDay(date, new Date())) {
+        classNames.push("bg-main-dark text-white rounded-full");
+      }
+
+      return (
+        <div
+          key={date.toString()}
+          className={classNames.join(" ")}
+          onClick={() => handleDateClick(date)}
+        >
+          {format(date, "d")}
+        </div>
+      );
+    });
+  };
   return (
-    <InputDropdown>
-      <div className="border border-main-light rounded-lg p-2">
-        <div className="flex items-center justify-between mb-2 ">
-          <button type="button" onClick={handlePreviousMonth}>
-            &#8249;
+    <InputDropdown onBlur={onBlur}>
+      <div className="border border-main-light rounded-lg p-2 flex flex-col items-center">
+        <div className="flex items-center justify-between mb-2 w-11/12">
+          <button
+            className="bg-gray-700 text-white w-4 h-4 flex justify-center items-center rounded-full pb-[2px]"
+            type="button"
+            onClick={handlePreviousMonth}
+          >
+            &larr;
           </button>
 
-          <div>
-            <button type="button" onClick={handleMonthClick}>
-              {new Date(year, month).toLocaleDateString("en-US", {
-                month: "long",
-              })}
-            </button>
+          <div className="flex gap-1">
+            <div>
+              <button
+                className="bg-main-light px-2 rounded-md"
+                type="button"
+                onClick={handleMonthClick}
+              >
+                <div className="px-1">
+                  {MONTH_ABBREVIATIONS[new Date(year, month).getMonth()]}
+                  <div className="triangle-down-right w-2 h-2 inline-block ml-1"></div>
+                </div>
+              </button>
 
-            {showMonthDropdown && (
-              <InputDropdown
-                liItems={[
-                  "January",
-                  "February",
-                  "March",
-                  "April",
-                  "May",
-                  "June",
-                  "July",
-                  "August",
-                  "September",
-                  "October",
-                  "November",
-                  "December",
-                ]}
-                onClick={handleMonthSelection}
-              />
-            )}
+              {showMonthDropdown && (
+                <InputDropdown
+                  liItems={MONTH_ABBREVIATIONS}
+                  onClick={handleMonthSelection}
+                />
+              )}
+            </div>
 
-            <button type="button" onClick={handleYearClick}>
-              {String(year)}
-            </button>
+            <div>
+              <button
+                className="bg-main-light px-2 rounded-md"
+                type="button"
+                onClick={handleYearClick}
+              >
+                <div className="px-1">
+                  {year}
+                  <div className="triangle-down-right w-2 h-2 inline-block ml-1"></div>
+                </div>
+              </button>
 
-            {showYearDropdown && (
-              <InputDropdown
-                liItems={Array.from({ length: 11 }, (_, i) => String(year + i))}
-                onClick={handleYearSelection}
-              />
-            )}
+              {showYearDropdown && (
+                <InputDropdown
+                  liItems={yearList(year)}
+                  onClick={handleYearSelection}
+                />
+              )}
+            </div>
           </div>
 
-          <button type="button" onClick={handleNextMonth}>
-            &#8250;
+          <button
+            className="bg-gray-700 text-white w-4 h-4 flex justify-center items-center rounded-full pb-[2px]"
+            type="button"
+            onClick={handleNextMonth}
+          >
+            &rarr;
           </button>
         </div>
 
         <div className="grid grid-cols-7 gap-1">
-          {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
+          {WEEK_DAYS_ABBREVIATIONS.map((day) => (
             <div key={day} className="text-center text-sm font-semibold">
               {day}
             </div>
           ))}
 
-          {daysInMonth.map((day) => (
-            <div
-              key={day}
-              onClick={() => handleDateClick(day)}
-              className={`text-center p-1 cursor-pointer ${
-                selectedDate &&
-                selectedDate.endsWith(`-${day.toString().padStart(2, "0")}`)
-                  ? "bg-blue-500 text-white rounded-full"
-                  : ""
-              }`}
-            >
-              {day}
-            </div>
-          ))}
+          {renderDays()}
         </div>
       </div>
     </InputDropdown>

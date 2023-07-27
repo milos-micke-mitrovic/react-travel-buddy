@@ -13,7 +13,9 @@ const Home: React.FC = () => {
   const [cityOfDestinationFields, setCityOfDestinationFields] = useState<
     string[]
   >([""]);
-  const [dateOfTrip, setDateOfTrip] = useState<string | null>(null);
+  const [dateOfTrip, setDateOfTrip] = useState<string>(
+    todayDate().split("/").reverse().join("-")
+  );
   const [isMiniCalendarOpen, setIsMiniCalendarOpen] = useState<boolean>(false);
   const [numberOfPassengers, setNumberOfPassengers] = useState<number>(0);
 
@@ -66,11 +68,24 @@ const Home: React.FC = () => {
     });
   };
 
+  
+
   const isFormValid =
     searchTerms[0] !== "" &&
+    cityOfDestinationFields.length > 1 && // Check if there's more than just the initial empty element
     cityOfDestinationFields.every((field) => field !== "") &&
-    (dateOfTrip ? new Date(dateOfTrip) > new Date() : false) &&
+    dateOfTrip !== "" &&
+    true &&
     numberOfPassengers >= 0;
+
+  // console.log(cityOfDestinationFields);
+
+  //     console.log("searchTerms[0]:", searchTerms[0]!== "");
+  // console.log("cityOfDestinationFields:", cityOfDestinationFields.every((field) => field !== ""));
+  // console.log("dateOfTrip:", (dateOfTrip ? new Date(dateOfTrip) > new Date() : false));
+  // console.log("numberOfPassengers:", numberOfPassengers >= 0);
+
+  // console.log("isFormValid:", isFormValid);
 
   return (
     <div className="flex items-center justify-center h-screen">
@@ -196,6 +211,7 @@ const Home: React.FC = () => {
               <MiniCalendar
                 selectedDate={dateOfTrip || ""}
                 onDateChange={handleDateChange}
+                onBlur={() => setIsMiniCalendarOpen(false)}
               />
             )}
           </div>
@@ -218,10 +234,8 @@ const Home: React.FC = () => {
           {/* Submit Button */}
           <button
             type="button"
-            className={`px-4 py-2 rounded-lg ${
-              isFormValid
-                ? "bg-blue-500 text-white"
-                : "bg-gray-400 text-gray-800"
+            className={`px-4 py-2 rounded-lg text-white ${
+              isFormValid ? "bg-gray-700" : "bg-gray-300"
             }`}
             onClick={handleSubmit}
             disabled={!isFormValid}

@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+.background {
+  background: conic-gradient(
+    from 167.75deg at 26.05% 40.64%,
+    rgba(207, 238, 187, 0.881587) -18.97deg,
+    #abe1c9 8.74deg,
+    #80cdd7 160.76deg,
+    #7c9ce5 225.35deg,
+    rgba(126, 163, 230, 0.22) 298.84deg,
+    rgba(207, 238, 187, 0.881587) 341.03deg,
+    #abe1c9 368.74deg
+  );
+  backdrop-filter: blur(100px);
+}
+
+.triangle-down-right {
+  background: linear-gradient(to bottom right, #C7D1F4 0%, #C7D1F4 50%, #4a5568 50%, #4a5568 100%);
+}
+
 .vertical-dots {
   width: 4px;
   height: 52px;
@@ -11,5 +29,5 @@
 }
 
 body {
-  @apply bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat min-h-screen;
+  @apply background;
 }
