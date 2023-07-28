@@ -5,7 +5,7 @@ const InputDropdown: React.FC<{
   onClick?: (item: string, index: number) => void;
   index?: number;
   children?: ReactNode;
-  onBlur?: () => void
+  onBlur?: () => void;
 }> = ({ liItems, onClick, index = -1, children, onBlur }) => {
   const inputDropdownRef = useRef<HTMLDivElement | null>(null);
   const [isDropdownVisible, setIsDropdownVisible] = useState(true);
@@ -18,8 +18,8 @@ const InputDropdown: React.FC<{
         !inputDropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownVisible(false);
-        if(onBlur) {
-          onBlur()
+        if (onBlur) {
+          onBlur();
         }
       }
     };
@@ -50,7 +50,7 @@ const InputDropdown: React.FC<{
                     key={item}
                     className="p-1 cursor-pointer hover:bg-main-light rounded-lg"
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent click propagation
+                      e.stopPropagation();
                       onClick(item, index);
                     }}
                   >

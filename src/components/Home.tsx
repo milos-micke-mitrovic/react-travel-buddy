@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import useCitySearch from "../hooks/useCitySearch";
-import markerImage from "../assets/images/marker.png";
 import FormLabel from "./UI/FormLabel";
 import InputDropdown from "./UI/InputDropdown";
 import SquareButton from "./UI/Buttons/SquareButton";
 import CircleButton from "./UI/Buttons/CircleButton";
+import Card from "./UI/Card";
+import Button from "./UI/Buttons/Button";
+import useCitySearch from "../hooks/useCitySearch";
+import markerImage from "../assets/images/marker.png";
 import MiniCalendar from "./MiniCalendar";
 import { todayDate } from "../utils";
 
@@ -18,6 +21,8 @@ const Home: React.FC = () => {
   );
   const [isMiniCalendarOpen, setIsMiniCalendarOpen] = useState<boolean>(false);
   const [numberOfPassengers, setNumberOfPassengers] = useState<number>(0);
+
+  const navigate = useNavigate();
 
   const {
     searchTerms,
@@ -54,12 +59,34 @@ const Home: React.FC = () => {
     setIsMiniCalendarOpen(false);
   };
 
-  const handleSubmit = () => {
-    // Implement the form submission logic here
+  const onSubmitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = {
+      cityOfOrigin: searchTerms[0],
+      cityOfDestinations: cityOfDestinationFields.filter(
+        (field) => field !== ""
+      ),
+      dateOfTrip: dateOfTrip,
+      numberOfPassengers: numberOfPassengers,
+    };
+
+    if (!isFormValid) {
+      alert("Please fill in all the required fields before submitting.");
+      return;
+    }
+
+    navigate("/search-results", { state: { formData } });
   };
 
   const handleSelectCity = (city: string, index: number) => {
     addSearchTerm(index, city);
+
+    setCityOfDestinationFields((prevFields) => {
+      const newFields = [...prevFields];
+      newFields[index - 1] = city;
+      return newFields;
+    });
 
     setShowSearchResults((prevShowResults) => {
       const newShowResults = [...prevShowResults];
@@ -68,183 +95,164 @@ const Home: React.FC = () => {
     });
   };
 
-  
-
   const isFormValid =
     searchTerms[0] !== "" &&
-    cityOfDestinationFields.length > 1 && // Check if there's more than just the initial empty element
     cityOfDestinationFields.every((field) => field !== "") &&
     dateOfTrip !== "" &&
-    true &&
-    numberOfPassengers >= 0;
-
-  // console.log(cityOfDestinationFields);
-
-  //     console.log("searchTerms[0]:", searchTerms[0]!== "");
-  // console.log("cityOfDestinationFields:", cityOfDestinationFields.every((field) => field !== ""));
-  // console.log("dateOfTrip:", (dateOfTrip ? new Date(dateOfTrip) > new Date() : false));
-  // console.log("numberOfPassengers:", numberOfPassengers >= 0);
-
-  // console.log("isFormValid:", isFormValid);
+    new Date(dateOfTrip).getTime() >= new Date().setHours(0, 0, 0, 0) && // Check if dateOfTrip is greater than or equal to today's date (ignoring the time)
+    numberOfPassengers > 0;
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="max-w-sm w-full sm:max-w-md bg-white p-8 rounded-lg shadow-md flex overflow-auto  max-h-screen md:max-h-[90%]">
-        <div className="flex flex-col">
-          <div className="flex flex-col items-center mr-10 mt-8">
-            <CircleButton additionalClasses="cursor-default">
-              <></>
-            </CircleButton>
-
-            <div className="vertical-dots"></div>
-
-            {cityOfDestinationFields.map((_, index) => (
-              <React.Fragment key={index}>
-                {index < cityOfDestinationFields.length - 1 ? (
-                  <>
-                    <CircleButton additionalClasses="cursor-default">
-                      <></>
-                    </CircleButton>
-
-                    <div className="vertical-dots"></div>
-                  </>
-                ) : (
-                  <img src={markerImage} className="w-4 h-5" alt="Marker" />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-
-          <CircleButton additionalClasses="cursor-default mt-7 pb-[1px]">
-            &#43;
+    <Card>
+      <div className="flex flex-col">
+        <div className="flex flex-col items-center mr-10 mt-8">
+          <CircleButton additionalClasses="!cursor-default">
+            <></>
           </CircleButton>
+
+          <div className="vertical-dots"></div>
+
+          {cityOfDestinationFields.map((_, index) => (
+            <React.Fragment key={index}>
+              {index < cityOfDestinationFields.length - 1 ? (
+                <>
+                  <CircleButton additionalClasses="!cursor-default">
+                    <></>
+                  </CircleButton>
+
+                  <div className="vertical-dots"></div>
+                </>
+              ) : (
+                <img src={markerImage} className="w-4 h-5" alt="Marker" />
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
-        <form className="w-full h-full">
-          {/* City of Origin */}
-          <div className="mb-4">
-            <FormLabel htmlFor="cityOfOrigin" label="City of Origin" />
+        <CircleButton additionalClasses="!cursor-default mt-7 pb-[1px]">
+          &#43;
+        </CircleButton>
+      </div>
 
-            <input
-              type="text"
-              id="cityOfOrigin"
-              value={searchTerms[0] || ""}
-              onChange={(e) => addSearchTerm(0, e.target.value)}
-              className="mt-1 h-10 p-2 border border-gray-300 rounded-lg w-11/12"
+      <form className="w-full h-full" onSubmit={onSubmitHandler}>
+        {/* City of Origin */}
+        <div className="mb-4">
+          <FormLabel htmlFor="cityOfOrigin" label="City of origin" />
+
+          <input
+            type="text"
+            id="cityOfOrigin"
+            value={searchTerms[0] || ""}
+            onChange={(e) => addSearchTerm(0, e.target.value)}
+            className="mt-1 h-10 p-2 border border-gray-300 rounded-lg w-11/12"
+          />
+
+          {showSearchResults[0] &&
+            searchResults[0] &&
+            searchResults[0].length > 0 && (
+              <InputDropdown
+                liItems={searchResults[0]}
+                onClick={handleSelectCity}
+                index={0}
+              />
+            )}
+        </div>
+
+        {/* City of Destination Fields */}
+        {cityOfDestinationFields.map((_, index) => (
+          <div className="mb-4" key={index}>
+            <FormLabel
+              htmlFor={`cityOfDestination_${index}`}
+              label="City of destination"
             />
 
-            {showSearchResults[0] &&
-              searchResults[0] &&
-              searchResults[0].length > 0 && (
+            <div className="flex items-center justify-between">
+              <input
+                type="text"
+                id={`cityOfDestination_${index}`}
+                value={searchTerms[index + 1] || ""}
+                onChange={(e) => addSearchTerm(index + 1, e.target.value)}
+                className="mt-1 p-2 h-10 border border-gray-300 rounded-lg w-11/12"
+              />
+
+              {index > 0 && (
+                <CircleButton
+                  onClick={() => handleRemoveCityOfDestinationField(index)}
+                >
+                  &#10005;
+                </CircleButton>
+              )}
+            </div>
+
+            {showSearchResults[index + 1] &&
+              searchResults[index + 1] &&
+              searchResults[index + 1].length > 0 && (
                 <InputDropdown
-                  liItems={searchResults[0]}
+                  liItems={searchResults[index + 1]}
                   onClick={handleSelectCity}
-                  index={0}
+                  index={index + 1}
                 />
               )}
           </div>
+        ))}
 
-          {/* City of Destination Fields */}
-          {cityOfDestinationFields.map((_, index) => (
-            <div className="mb-4" key={index}>
-              <FormLabel
-                htmlFor={`cityOfDestination_${index}`}
-                label="City of destination"
-              />
+        {/* Add Destination Button */}
+        <div
+          onClick={handleAddCityOfDestinationField}
+          className="text-main-dark cursor-pointer mb-4  flex items-center"
+        >
+          Add Destination
+        </div>
 
-              <div className="flex items-center justify-between">
-                <input
-                  type="text"
-                  id={`cityOfDestination_${index}`}
-                  value={searchTerms[index + 1] || ""}
-                  onChange={(e) => addSearchTerm(index + 1, e.target.value)}
-                  className="mt-1 p-2 h-10 border border-gray-300 rounded-lg w-11/12"
-                />
+        {/* Date of the Trip */}
+        <div className="mb-4">
+          <FormLabel htmlFor="dateOfTrip" label="Date" />
 
-                {index > 0 && (
-                  <CircleButton
-                    onClick={() => handleRemoveCityOfDestinationField(index)}
-                  >
-                    &#10005;
-                  </CircleButton>
-                )}
-              </div>
-
-              {showSearchResults[index + 1] &&
-                searchResults[index + 1] &&
-                searchResults[index + 1].length > 0 && (
-                  <InputDropdown
-                    liItems={searchResults[index + 1]}
-                    onClick={handleSelectCity}
-                    index={index + 1}
-                  />
-                )}
-            </div>
-          ))}
-
-          {/* Add Destination Button */}
           <div
-            onClick={handleAddCityOfDestinationField}
-            className="text-main-dark cursor-pointer mb-4  flex items-center"
+            onClick={openMiniCalendar}
+            className="flex justify-center items-center border border-gray-300 rounded-lg p-2 mt-1 h-10 max-w-min cursor-pointer"
           >
-            Add Destination
+            {dateOfTrip
+              ? new Date(dateOfTrip).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : todayDate()}
           </div>
 
-          {/* Date of the Trip */}
-          <div className="mb-4">
-            <FormLabel htmlFor="dateOfTrip" label="Date" />
+          {isMiniCalendarOpen && (
+            <MiniCalendar
+              selectedDate={dateOfTrip || ""}
+              onDateChange={handleDateChange}
+              onBlur={() => setIsMiniCalendarOpen(false)}
+            />
+          )}
+        </div>
 
-            <div
-              onClick={openMiniCalendar}
-              className="flex justify-center items-center border border-gray-300 rounded-lg p-2 mt-1 h-10 max-w-min cursor-pointer"
-            >
-              {dateOfTrip
-                ? new Date(dateOfTrip).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })
-                : todayDate()}
-            </div>
+        {/* Number of Passengers */}
+        <div className="mb-4">
+          <FormLabel label="Passengers" />
 
-            {isMiniCalendarOpen && (
-              <MiniCalendar
-                selectedDate={dateOfTrip || ""}
-                onDateChange={handleDateChange}
-                onBlur={() => setIsMiniCalendarOpen(false)}
-              />
-            )}
+          <div className="flex items-center gap-4 border border-gray-300 rounded-lg p-2 mt-1 h-10 max-w-min">
+            <SquareButton onClick={handleDecreasePassengers}>
+              &#45;
+            </SquareButton>
+
+            {numberOfPassengers}
+
+            <SquareButton onClick={handleIncreasePassengers}>
+              &#43;
+            </SquareButton>
           </div>
+        </div>
 
-          {/* Number of Passengers */}
-          <div className="mb-4">
-            <FormLabel label="Passengers" />
-
-            <div className="flex items-center gap-4 border border-gray-300 rounded-lg p-2 mt-1 h-10 max-w-min">
-              <SquareButton onClick={handleDecreasePassengers}>
-                &#45;
-              </SquareButton>
-              {numberOfPassengers}
-              <SquareButton onClick={handleIncreasePassengers}>
-                &#43;
-              </SquareButton>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="button"
-            className={`px-4 py-2 rounded-lg text-white ${
-              isFormValid ? "bg-gray-700" : "bg-gray-300"
-            }`}
-            onClick={handleSubmit}
-            disabled={!isFormValid}
-          >
-            Search
-          </button>
-        </form>
-      </div>
-    </div>
+        {/* Submit Button */}
+        <Button type="submit" disabled={!isFormValid}>
+          Search
+        </Button>
+      </form>
+    </Card>
   );
 };
 

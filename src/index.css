@@ -17,7 +17,13 @@
 }
 
 .triangle-down-right {
-  background: linear-gradient(to bottom right, #C7D1F4 0%, #C7D1F4 50%, #4a5568 50%, #4a5568 100%);
+  background: linear-gradient(
+    to bottom right,
+    #c7d1f4 0%,
+    #c7d1f4 50%,
+    #4a5568 50%,
+    #4a5568 100%
+  );
 }
 
 .vertical-dots {
@@ -27,6 +33,30 @@
   margin-top: 5px;
   margin-bottom: 3px;
 }
+
+/* Speech bubble */
+.speech-bubble {
+  padding: 0 5px;
+  color: #7786d2;
+  position: relative;
+  border: 1px solid #7786d2;
+  border-radius: 5px;
+}
+
+.speech-bubble::after {
+  content: "";
+  border: 5px solid transparent;
+  position: absolute;
+}
+
+.right.speech-bubble::after {
+  border-left-color: #7786d2;
+  border-right: 0;
+  right: -5px;
+  top: 50%;
+  margin-top: -5px;
+}
+/* End speech bubble */
 
 body {
   @apply background;

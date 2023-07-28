@@ -1,12 +1,10 @@
-// api/citiesData.ts
-
 interface City {
     name: string;
     latitude: number;
     longitude: number;
   }
   
-  const citiesData: City[] = [
+  export const citiesData: City[] = [
     { name: 'Paris', latitude: 48.856614, longitude: 2.352222 },
     { name: 'Marseille', latitude: 43.296482, longitude: 5.369780 },
     { name: 'Lyon', latitude: 45.764043, longitude: 4.835659 },
@@ -38,7 +36,8 @@ interface City {
         );
         const cityNames = filteredCities.map((city) => city.name);
         resolve(cityNames);
-      }, 500); // You can adjust the delay time as needed
+      }, 500);
     });
   };
+
   

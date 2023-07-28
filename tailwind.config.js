@@ -6,7 +6,7 @@ export default {
       colors: {
         "main-light": "#C7D1F4",
         "main-dark": "#7786D2",
-      }
+      },
     },
   },
   plugins: [],
